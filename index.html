@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Góc Bếp Tuổi Thơ: Super Chef</title>
+    <style>
+        :root {
+            --primary: #ff6b6b;
+            --secondary: #ffbe76;
+            --accent: #ff9f43;
+            --bg: #f8efba;
+            --dark: #2d3436;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Comic Sans MS', 'Bubblegum Sans', cursive, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fbc531, #e84118);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 900px;
+            height: 600px;
+            background: var(--bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 8px solid #fff;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Screen Styles */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: opacity 0.3s ease;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Start Screen */
+        #start-screen {
+            background: radial-gradient(circle, #fff200, #ff793f);
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            color: #fff;
+            text-shadow: 3px 3px 0px #eb4d4b, 6px 6px 0px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            text-align: center;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .btn {
+            background-color: #2ed573;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.8rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #26af5f;
+            transition: all 0.1s ease;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #26af5f;
+        }
+
+        /* Header / HUD */
+        #game-header {
+            height: 70px;
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            border-bottom: 4px dashed #ff793f;
+        }
+
+        .hud-item {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--dark);
+            background: #f1f2f6;
+            padding: 8px 20px;
+            border-radius: 20px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Game Stages Container */
+        .stage-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 20px;
+        }
+
+        /* Stage 1: Order Selection */
+        .recipe-cards {
+            display: flex;
+            gap: 30px;
+        }
+
+        .recipe-card {
+            background: white;
+            border: 5px solid #ff793f;
+            border-radius: 20px;
+            padding: 20px;
+            width: 250px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 25px rgba(0,0,0,0.2);
+            border-color: #e84118;
+        }
+
+        .recipe-img {
+            font-size: 5rem;
+            margin-bottom: 15px;
+        }
+
+        .recipe-title {
+            font-size: 1.5rem;
+            color: var(--dark);
+            margin-bottom: 10px;
+        }
+
+        /* Stage 2: Prep (Chopping / Mixing) */
+        .prep-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #cutting-board {
+            width: 400px;
+            height: 250px;
+            background: #d1ccc0;
+            border: 8px solid #84817a;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        #ingredient-to-cut {
+            font-size: 7rem;
+            transition: transform 0.1s;
+        }
+
+        .progress-bar-container {
+            width: 300px;
+            height: 25px;
+            background: #dfe4ea;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 3px solid #ced6e0;
+        }
+
+        #prep-progress {
+            width: 0%;
+            height: 100%;
+            background: #1e90ff;
+            transition: width 0.1s;
+        }
+
+        /* Stage 3: Cooking (Stove / Pan) */
+        .stove-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #pan {
+            width: 350px;
+            height: 350px;
+            background: #2f3640;
+            border-radius: 50%;
+            border: 12px solid #718093;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        #cooking-item {
+            font-size: 6rem;
+            cursor: grab;
+            transition: filter 0.3s;
+        }
+
+        .heat-indicator {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #e84118;
+            background: white;
+            padding: 5px 15px;
+            border-radius: 10px;
+        }
+
+        /* Stage 4: Assembly / Decorating */
+        .assembly-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            gap: 20px;
+        }
+
+        .ingredient-shelf {
+            width: 300px;
+            background: #fff;
+            border-radius: 15px;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            align-content: start;
+            border: 4px solid #ced6e0;
+        }
+
+        .shelf-item {
+            background: #f1f2f6;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            font-size: 2.5rem;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+            border: 2px solid #dfe4ea;
+        }
+
+        .shelf-item:hover {
+            transform: scale(1.05);
+            background: #dfe4ea;
+        }
+
+        .plate-area {
+            flex: 1;
+            background: #fff;
+            border-radius: 15px;
+            border: 4px dashed #ced6e0;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            min-height: 350px;
+        }
+
+        .plate {
+            width: 350px;
+            height: 40px;
+            background: #f1f2f6;
+            border-radius: 50%;
+            border-bottom: 8px solid #dcdde1;
+            position: absolute;
+            bottom: 30px;
+        }
+
+        .stacked-item {
+            font-size: 3.5rem;
+            animation: dropIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+        }
+
+        @keyframes dropIn {
+            0% { transform: translateY(-100px) scale(0); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        /* Result Screen */
+        #result-screen {
+            background: linear-gradient(135deg, #7bed9f, #2ed573);
+            text-align: center;
+        }
+
+        .judge-avatar {
+            font-size: 6rem;
+            margin-bottom: 10px;
+            animation: bounce 1s infinite;
+        }
+
+        .score-box {
+            background: white;
+            padding: 20px 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+
+        .score-text {
+            font-size: 2.5rem;
+            color: #2f3640;
+            font-weight: bold;
+        }
+
+        .comment-text {
+            font-size: 1.3rem;
+            color: #57606f;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- START SCREEN -->
+        <div id="start-screen" class="screen">
+            <h1>🍳 Góc Bếp Tuổi Thơ 🍔</h1>
+            <p style="font-size: 1.5rem; color: #fff; margin-bottom: 20px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">Trở thành Siêu Đầu Bếp Nhí tài ba!</p>
+            <button class="btn" onclick="startGame()">BẮT ĐẦU NẤU</button>
+        </div>
+
+        <!-- GAMEPLAY SCREEN -->
+        <div id="game-screen" class="screen hidden">
+            <div id="game-header">
+                <div id="stage-title" class="hud-item">Giai đoạn: Chọn món</div>
+                <div id="timer" class="hud-item">⏱️ Thời gian: 60s</div>
+                <div id="score-hud" class="hud-item">⭐ Điểm: 0</div>
+            </div>
+
+            <div id="stage-container" class="stage-content">
+                <!-- Dynamic stage contents will be injected here -->
+            </div>
+        </div>
+
+        <!-- RESULT SCREEN -->
+        <div id="result-screen" class="screen hidden">
+            <div id="judge-face" class="judge-avatar">🤩</div>
+            <h1>Hoàn Thành Xuất Sắc!</h1>
+            <div class="score-box">
+                <div id="final-score" class="score-text">Điểm của bạn: 100/100</div>
+                <div id="judge-comment" class="comment-text">"Món ăn tuyệt vời như mẹ nấu!"</div>
+            </div>
+            <button class="btn" onclick="restartGame()">Chơi Lại Ngay</button>
+        </div>
+    </div>
+
+    <script>
+        // Audio Synthesizer using Web Audio API for sound effects
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            let now = audioCtx.currentTime;
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'chop') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.setValueAtTime(300, now + 0.05);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'sizzle') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'win') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.setValueAtTime(450, now + 0.15);
+                osc.frequency.setValueAtTime(600, now + 0.3);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            }
+        }
+
+        // Game State
+        let gameState = {
+            score: 0,
+            currentStage: 1,
+            selectedRecipe: null,
+            prepProgress: 0,
+            cookProgress: 0,
+            timer: 60,
+            timerInterval: null,
+            assembledItems: []
+        };
+
+        const recipes = {
+            burger: { name: "Burger Bò Phô Mai", icon: "🍔", ingredients: ["🍞", "🥬", "🧀", "🥩", "🍞"] },
+            pizza: { name: "Pizza Hải Sản", icon: "🍕", ingredients: ["🫓", "🍅", "🧀", "🦐", "🍄"] }
+        };
+
+        function startGame() {
+            playSound('click');
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            
+            gameState.score = 0;
+            gameState.currentStage = 1;
+            gameState.timer = 60;
+            
+            startTimer();
+            loadStage1();
+        }
+
+        function startTimer() {
+            clearInterval(gameState.timerInterval);
+            gameState.timerInterval = setInterval(() => {
+                gameState.timer--;
+                document.getElementById('timer').innerText = `⏱️ Thời gian: ${gameState.timer}s`;
+                if (gameState.timer <= 0) {
+                    clearInterval(gameState.timerInterval);
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        // Stage 1: Choose Recipe
+        function loadStage1() {
+            gameState.currentStage = 1;
+            document.getElementById('stage-title').innerText = "Giai đoạn 1: Chọn món ăn";
+            
+            const container = document.getElementById('stage-container');
+            container.innerHTML = `
+                <h2 style="margin-bottom: 20px; color: var(--dark);">Hôm nay bạn muốn nấu món gì nào?</h2>
+                <div class="recipe-cards">
+                    <div class="recipe-card" onclick="selectRecipe('burger')">
+                        <div class="recipe-img">🍔</div>
+                        <div class="recipe-title">Burger Phô Mai</div>
+                        <p style="color: #636e72;">Nhanh gọn, thơm ngon!</p>
+                    </div>
+                    <div class="recipe-card" onclick="selectRecipe('pizza')">
+                        <div class="recipe-img">🍕</div>
+                        <div class="recipe-title">Pizza Hải Sản</div>
+                        <p style="color: #636e72;">Đậm đà hương vị!</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectRecipe(type) {
+            playSound('click');
+            gameState.selectedRecipe = type;
+            gameState.score += 20;
+            updateHUD();
+            loadStage2();
+        }
+
+        // Stage 2: Prep (Chop / Slice)
+        function loadStage2() {
+            gameState.currentStage = 2;
+            gameState.prepProgress = 0;
+            document.getElementById('stage-title').innerText = "Giai đoạn 2: Sơ chế nguyên liệu";
+            
+            const ingredientIcon = gameState.selectedRecipe === 'burger' ? '🥩' : '🦐';
+            
+            const container = document.getElementById('stage-container');
+            container.innerHTML = `
+                <div class="prep-area">
+                    <h2 style="color: var(--dark);">Click liên tục vào thớt để thái nguyên liệu!</h2>
+                    <div id="cutting-board" onclick="chopIngredient()">
+                        <div id="ingredient-to-cut">${ingredientIcon}</div>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div id="prep-progress"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function chopIngredient() {
+            playSound('chop');
+            gameState.prepProgress += 10;
+            document.getElementById('prep-progress').style.width = gameState.prepProgress + '%';
+            
+            const item = document.getElementById('ingredient-to-cut');
+            item.style.transform = 'scale(1.2) rotate(10deg)';
+            setTimeout(() => item.style.transform = 'scale(1) rotate(0deg)', 50);
+
+            if (gameState.prepProgress >= 100) {
+                gameState.score += 30;
+                updateHUD();
+                loadStage3();
+            }
+        }
+
+        // Stage 3: Cooking (Stove)
+        function loadStage3() {
+            gameState.currentStage = 3;
+            gameState.cookProgress = 0;
+            document.getElementById('stage-title').innerText = "Giai đoạn 3: Nấu trên bếp";
+
+            const cookIcon = gameState.selectedRecipe === 'burger' ? '🥩' : '🫓';
+
+            const container = document.getElementById('stage-container');
+            container.innerHTML = `
+                <div class="stove-area">
+                    <div class="heat-indicator">🔥 Giữ lửa vừa vặn bằng cách click giữ chảo!</div>
+                    <div id="pan" onmousedown="startCooking()" onmouseup="stopCooking()" ontouchstart="startCooking()" ontouchend="stopCooking()">
+                        <div id="cooking-item">${cookIcon}</div>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div id="prep-progress" style="background: #e84118;"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        let cookingInterval = null;
+        function startCooking() {
+            playSound('sizzle');
+            clearInterval(cookingInterval);
+            cookingInterval = setInterval(() => {
+                gameState.cookProgress += 2;
+                document.getElementById('prep-progress').style.width = gameState.cookProgress + '%';
+                
+                if (gameState.cookProgress >= 100) {
+                    clearInterval(cookingInterval);
+                    gameState.score += 30;
+                    updateHUD();
+                    loadStage4();
+                }
+            }, 100);
+        }
+
+        function stopCooking() {
+            clearInterval(cookingInterval);
+        }
+
+        // Stage 4: Assembly
+        function loadStage4() {
+            gameState.currentStage = 4;
+            document.getElementById('stage-title').innerText = "Giai đoạn 4: Hoàn thiện món ăn";
+            gameState.assembledItems = [];
+
+            const recipe = recipes[gameState.selectedRecipe];
+            
+            const container = document.getElementById('stage-container');
+            container.innerHTML = `
+                <div class="assembly-container">
+                    <div class="ingredient-shelf" id="shelf">
+                        <!-- Filled by JS -->
+                    </div>
+                    <div class="plate-area" id="plate-area">
+                        <div class="plate"></div>
+                    </div>
+                </div>
+            `;
+
+            const shelf = document.getElementById('shelf');
+            // Shuffle ingredients for extra fun
+            let available = [...recipe.ingredients];
+            available.forEach(ing => {
+                const div = document.createElement('div');
+                div.className = 'shelf-item';
+                div.innerText = ing;
+                div.onclick = () => addIngredientToPlate(ing);
+                shelf.appendChild(div);
+            });
+        }
+
+        function addIngredientToPlate(ing) {
+            playSound('click');
+            gameState.assembledItems.push(ing);
+            
+            const plateArea = document.getElementById('plate-area');
+            const stacked = document.createElement('div');
+            stacked.className = 'stacked-item';
+            stacked.innerText = ing;
+            plateArea.insertBefore(stacked, plateArea.firstChild);
+
+            const recipe = recipes[gameState.selectedRecipe];
+            if (gameState.assembledItems.length === recipe.ingredients.length) {
+                gameState.score += 20;
+                updateHUD();
+                setTimeout(() => endGame(true), 800);
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('score-hud').innerText = `⭐ Điểm: ${gameState.score}`;
+        }
+
+        function endGame(success) {
+            clearInterval(gameState.timerInterval);
+            playSound('win');
+            
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            document.getElementById('final-score').innerText = `Điểm của bạn: ${gameState.score}/100`;
+            
+            const comment = document.getElementById('judge-comment');
+            const face = document.getElementById('judge-face');
+
+            if (gameState.score >= 90) {
+                face.innerText = "🤩";
+                comment.innerText = `"Tuyệt đỉnh! Đầu bếp 5 sao xuất hiện rồi!"`;
+            } else if (gameState.score >= 60) {
+                face.innerText = "😋";
+                comment.innerText = `"Rất ngon và hợp khẩu vị!"`;
+            } else {
+                face.innerText = "😅";
+                comment.innerText = `"Cố gắng thêm chút nữa lần sau nhé!"`;
+            }
+        }
+
+        function restartGame() {
+            playSound('click');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
